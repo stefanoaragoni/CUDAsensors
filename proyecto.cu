@@ -155,61 +155,49 @@ int main(void)
 		cudaHostAlloc((void**)&c3,SIZE*sizeof(double),cudaHostAllocDefault);
 		cudaHostAlloc((void**)&z3,SIZE*sizeof(double),cudaHostAllocDefault);
 
-		if(newSize%2==0){
-			newSize = newSize/2;
 
-			for(int i=0;i<newSize;i++) 
-			{
-				a1[i] = alturaArray[i];
-				b1[i] = alturaArray[i+newSize];
-				
-				a2[i] = temperaturaArray[i];
-				b2[i] = temperaturaArray[i+newSize];
+		for(int i=0;i<SIZE;i++) 
+		{
+			a1[i] = alturaArray[i];
+			b1[i] = alturaArray[i+SIZE];
+			
+			a2[i] = temperaturaArray[i];
+			b2[i] = temperaturaArray[i+SIZE];
 
-				a3[i] = aceleracionArray[i];
-				b3[i] = aceleracionArray[i+newSize];
+			a3[i] = aceleracionArray[i];
+			b3[i] = aceleracionArray[i+SIZE];
 
-				z1[i] = SIZE;
-				z2[i] = SIZE;
-				z3[i] = SIZE;
-			}
-
-		}else{
-			newSize = (newSize+1)/2;
-
-			for(int i=0;i<newSize;i++) 
-			{
-				a1[i] = alturaArray[i];
-				a2[i] = temperaturaArray[i];
-				a3[i] = aceleracionArray[i];
-
-				z1[i] = SIZE;
-				z2[i] = SIZE;
-				z3[i] = SIZE;
-				
-				if(i == newSize-1){
-					b1[i] = 0;	
-					b2[i] = 0;
-					b3[i] = 0;
-				}
-				else{
-					b1[i] = alturaArray[i+newSize];
-					b2[i] = temperaturaArray[i+newSize];
-					b3[i] = aceleracionArray[i+newSize];
-				}
-				
-			}
+			z1[i] = SIZE;
+			z2[i] = SIZE;
+			z3[i] = SIZE;
 		}
+
+
+		newSize = newSize + 1;
+
+		if(newSize%2==0){
+			b1[SIZE-1] = 0;
+
+			b2[SIZE-1] = 0;
+
+			b3[SIZE-1] = 0;
+		}
+
+		/*printf("\n");
+		for(int loop = 0; loop < SIZE; loop++)
+      		printf("%f ", a1[loop]);
+		printf("\n\t");
+		for(int loop = 0; loop < SIZE; loop++)
+      		printf("%f ", b1[loop]);*/
+
 
 		int cantHilos = 1024;
 		
-
 		if(SIZE<1024){
 			cantHilos = SIZE;
 		}
 
-		int blocks = ceil(SIZE/cantHilos);
-		
+		int blocks = (SIZE/cantHilos)+1;	
 
 		//stream 1
 		cudaMemcpyAsync(dev_a1,a1,SIZE*sizeof(double),cudaMemcpyHostToDevice,stream1);
@@ -242,6 +230,7 @@ int main(void)
 			aceleracionArray[i] = c3[i];
 		}
 
+		//printf("\n\t POST SIZE: %d, A1 %f, B1 %f",SIZE, c1[0], c1[SIZE-1]);
 		
 		cudaStreamDestroy(stream1); 		// because we care
 		cudaStreamDestroy(stream2); 
@@ -252,11 +241,6 @@ int main(void)
 	printf("\nAltura (promedio total): %f",alturaArray[0]);
 	printf("\nTemperatura (promedio total): %f",temperaturaArray[0]);
 	printf("\nAceleración en Eje X (promedio total): %f",aceleracionArray[0]);
-
-
-	
-		
-
 
 	return 0;
 }
